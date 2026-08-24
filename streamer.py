@@ -6,11 +6,7 @@ import threading
 import re
 from typing import Optional, List, Dict, Any
 
-try:
-    import imageio_ffmpeg
-    FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
-except Exception:
-    FFMPEG_BIN = "ffmpeg"
+FFMPEG_BIN = "ffmpeg"
 
 def get_video_duration(video_path: str) -> float:
     """Probes video duration in seconds using FFmpeg"""
@@ -104,15 +100,7 @@ class StreamManager:
         self.active_streams: Dict[int, StreamInstance] = {}
 
     def get_ffmpeg_path(self) -> str:
-        global FFMPEG_BIN
-        if FFMPEG_BIN and os.path.exists(FFMPEG_BIN):
-            return FFMPEG_BIN
-        try:
-            import imageio_ffmpeg
-            FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
-            return FFMPEG_BIN
-        except Exception:
-            return "ffmpeg"
+        return "ffmpeg"
 
     def is_running(self, stream_id: Optional[int] = None) -> bool:
         if stream_id is not None:
