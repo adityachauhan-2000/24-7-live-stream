@@ -3,4 +3,5 @@ uvicorn
 jinja2
 python-multipart
 aiofiles
-imageio-ffmpeg
+pymysql
+cryptography
