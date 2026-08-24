@@ -212,6 +212,7 @@ class StreamManager:
 
         ffmpeg_cmd = [
             ffmpeg_exe,
+            '-nostdin'
         ] + input_args + [
             '-vf', video_filters,
             '-r', '30',
