@@ -129,7 +129,7 @@
             <!-- Active Video Spotlight Box -->
             <div id="activeVideoSpotlight" style="background: #141414; border: 1px solid #333; border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
                 <div style="width: 120px; height: 68px; background: #000; border-radius: 6px; overflow: hidden; position: relative; flex-shrink: 0;">
-                    <img id="spotlightThumb" src="{{ current_video_thumb or '/static/thumbnails/default.jpg' }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/thumbnails/default.jpg'">
+                    <img id="spotlightThumb" src="{{ current_video_thumb or '/static/thumbnails/default.jpg' }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='/static/thumbnails/default.jpg'">
                     <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); font-size: 0.7rem; padding: 1px 4px; border-radius: 3px; color: #fff;">
                         🔴 LIVE
                     </span>
