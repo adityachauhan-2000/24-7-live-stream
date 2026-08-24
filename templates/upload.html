@@ -262,9 +262,17 @@
                     <label class="yt-label">Select Initial Videos</label>
                     <div style="max-height: 200px; overflow-y: auto; background: #121212; border: 1px solid var(--yt-border); border-radius: 6px; padding: 0.75rem;">
                         {% for video in videos %}
-                            <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.4rem 0; font-size: 0.875rem; cursor: pointer; color: var(--yt-text-primary);">
-                                <input type="checkbox" name="playlist_initial_videos" value="{{ video.filename }}">
-                                <span>{{ video.title }}</span>
+                            <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; font-size: 0.875rem; cursor: pointer; color: var(--yt-text-primary); border-bottom: 1px solid #222;">
+                                <input type="checkbox" name="playlist_initial_videos" value="{{ video.filename }}" style="margin-right: 0.5rem;">
+                                {% if video.thumbnail %}
+                                    <img src="{{ video.thumbnail }}" style="width: 60px; height: 34px; object-fit: cover; border-radius: 4px;">
+                                {% else %}
+                                    <div style="width: 60px; height: 34px; background: #333; border-radius: 4px;"></div>
+                                {% endif %}
+                                <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center;">
+                                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 350px;">{{ video.title }}</span>
+                                    <span style="font-size: 0.75rem; color: var(--yt-text-secondary); margin-top: 2px;">{{ video.uploaded_at }}</span>
+                                </div>
                             </label>
                         {% endfor %}
                     </div>
@@ -291,9 +299,17 @@
                 <label class="yt-label">Select videos</label>
                 <div id="addToPlaylistCheckboxes" style="max-height: 240px; overflow-y: auto; background: #121212; border: 1px solid var(--yt-border); border-radius: 6px; padding: 0.75rem;">
                     {% for video in videos %}
-                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.4rem 0; font-size: 0.875rem; cursor: pointer; color: var(--yt-text-primary);">
-                            <input type="checkbox" class="add-to-pl-chk" value="{{ video.filename }}">
-                            <span>{{ video.title }}</span>
+                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; font-size: 0.875rem; cursor: pointer; color: var(--yt-text-primary); border-bottom: 1px solid #222;">
+                            <input type="checkbox" class="add-to-pl-chk" value="{{ video.filename }}" style="margin-right: 0.5rem;">
+                            {% if video.thumbnail %}
+                                <img src="{{ video.thumbnail }}" style="width: 60px; height: 34px; object-fit: cover; border-radius: 4px;">
+                            {% else %}
+                                <div style="width: 60px; height: 34px; background: #333; border-radius: 4px;"></div>
+                            {% endif %}
+                            <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center;">
+                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 350px;">{{ video.title }}</span>
+                                <span style="font-size: 0.75rem; color: var(--yt-text-secondary); margin-top: 2px;">{{ video.uploaded_at }}</span>
+                            </div>
                         </label>
                     {% endfor %}
                 </div>

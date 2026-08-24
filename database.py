@@ -11,6 +11,13 @@ DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "rootpassword")
 DB_NAME = os.getenv("DB_NAME", "stream_app")
 
+def sanitize_row(row):
+    if not row: return row
+    for k, v in row.items():
+        if isinstance(v, datetime):
+            row[k] = v.isoformat()
+    return row
+
 def get_db():
     return pymysql.connect(
         host=DB_HOST,
@@ -239,7 +246,7 @@ def get_all_live_streams(user_id: int) -> List[Dict[str, Any]]:
     )
     rows = cursor.fetchall()
     conn.close()
-    return list(rows)
+    return [sanitize_row(dict(r)) for r in rows]
 
 def get_live_stream_by_id(stream_id: int, user_id: int) -> Optional[Dict[str, Any]]:
     conn = get_db()
@@ -250,7 +257,7 @@ def get_live_stream_by_id(stream_id: int, user_id: int) -> Optional[Dict[str, An
     )
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return sanitize_row(dict(row)) if row else None
 
 def update_live_stream(stream_id: int, user_id: int, title: str, stream_url: str, stream_key: str, source_type: str, selected_source: str):
     conn = get_db()
@@ -275,7 +282,7 @@ def get_stream_credentials() -> Dict[str, Any]:
     row = cursor.fetchone()
     conn.close()
     if row:
-        return dict(row)
+        return sanitize_row(dict(row))
     return {
         "stream_url": "rtmp://a.rtmp.youtube.com/live2",
         "stream_key": "",
@@ -321,7 +328,7 @@ def get_all_videos(user_id: int) -> List[Dict[str, Any]]:
     )
     rows = cursor.fetchall()
     conn.close()
-    return list(rows)
+    return [sanitize_row(dict(r)) for r in rows]
 
 def get_video(user_id: int, filename: str) -> Optional[Dict[str, Any]]:
     conn = get_db()
@@ -332,7 +339,7 @@ def get_video(user_id: int, filename: str) -> Optional[Dict[str, Any]]:
     )
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return sanitize_row(dict(row)) if row else None
 
 def delete_video_record(user_id: int, filename: str):
     conn = get_db()
@@ -368,7 +375,7 @@ def get_all_playlists(user_id: int) -> List[Dict[str, Any]]:
     
     playlists = []
     for row in playlist_rows:
-        p_dict = dict(row)
+        p_dict = sanitize_row(dict(row))
         cursor.execute("""
             SELECT pi.id, pi.video_id, pi.position, v.filename AS video_filename, v.title, v.thumbnail, v.size_bytes
             FROM playlist_items pi
@@ -376,7 +383,7 @@ def get_all_playlists(user_id: int) -> List[Dict[str, Any]]:
             WHERE pi.playlist_id = %s
             ORDER BY pi.position ASC, pi.id ASC
         """, (p_dict["id"],))
-        items = list(cursor.fetchall())
+        items = [sanitize_row(dict(i)) for i in cursor.fetchall()]
         p_dict["items"] = items
         p_dict["video_items"] = items
         p_dict["video_count"] = len(items)
@@ -394,7 +401,7 @@ def get_playlist_by_id(playlist_id: int, user_id: int) -> Optional[Dict[str, Any
         conn.close()
         return None
         
-    p_dict = dict(row)
+    p_dict = sanitize_row(dict(row))
     cursor.execute("""
         SELECT pi.id, pi.video_id, pi.position, v.filename AS video_filename, v.title, v.thumbnail, v.size_bytes
         FROM playlist_items pi
@@ -402,7 +409,7 @@ def get_playlist_by_id(playlist_id: int, user_id: int) -> Optional[Dict[str, Any
         WHERE pi.playlist_id = %s
         ORDER BY pi.position ASC, pi.id ASC
     """, (playlist_id,))
-    items = list(cursor.fetchall())
+    items = [sanitize_row(dict(i)) for i in cursor.fetchall()]
     p_dict["items"] = items
     p_dict["video_items"] = items
     p_dict["video_count"] = len(items)
