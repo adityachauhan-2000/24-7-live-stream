@@ -1,0 +1,643 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="yt-page-header">
+    <div>
+        <h1 class="yt-page-title">Live Control Room</h1>
+        <p class="yt-page-desc">Manage, create, and broadcast multiple 24/7 continuous live streams to YouTube Studio simultaneously.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <button type="button" class="yt-btn yt-btn-primary" onclick="openCreateStreamModal()">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            <span>CREATE STREAM</span>
+        </button>
+    </div>
+</div>
+
+<!-- Live Streams Management Table (YouTube Studio Style) -->
+<div class="yt-table-container">
+    <table class="yt-table">
+        <thead>
+            <tr>
+                <th>Broadcast Stream</th>
+                <th style="width: 140px;">Status</th>
+                <th style="width: 180px;">Source Media</th>
+                <th style="width: 130px;">Profile</th>
+                <th style="width: 110px;">Uptime</th>
+                <th style="width: 220px; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="streamsTableBody">
+            {% if streams %}
+                {% for stream in streams %}
+                    <tr id="stream-row-{{ stream.id }}" class="stream-row-clickable" onclick="navigateToStream(event, {{ stream.id }})" style="cursor: pointer; transition: background 0.15s;">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: #282828; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: {% if stream.is_running %}#ff4e45{% else %}#888{% endif %};">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                        <circle cx="12" cy="12" r="3.2"/>
+                                        <path d="M9 12c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5S9 12.83 9 12zm7.07-7.07l-1.41 1.41A7.97 7.97 0 0 1 18 12c0 2.21-.89 4.21-2.34 5.66l1.41 1.41A9.97 9.97 0 0 0 20 12c0-2.76-1.12-5.26-2.93-7.07zm-10.14 0A9.97 9.97 0 0 0 4 12c0 2.76 1.12 5.26 2.93 7.07l1.41-1.41A7.97 7.97 0 0 1 6 12c0-2.21.89-4.21 2.34-5.66L6.93 4.93z"/>
+                                    </svg>
+                                </div>
+                                <div style="overflow: hidden;">
+                                    <div style="font-weight: 600; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
+                                        {{ stream.title }}
+                                    </div>
+                                    <div style="font-size: 0.775rem; color: #888; margin-top: 2px;">
+                                        Key: ••••••••{{ stream.stream_key[-4:] if stream.stream_key|length >= 4 else '••••' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div id="status-badge-{{ stream.id }}">
+                                {% if stream.is_running %}
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(43, 166, 64, 0.15); border: 1px solid #2ba640; color: #2ba640; padding: 3px 8px; border-radius: 12px; font-size: 0.775rem; font-weight: 600;">
+                                        <span>●</span> LIVE 24/7
+                                    </span>
+                                {% else %}
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #222; border: 1px solid #333; color: #888; padding: 3px 8px; border-radius: 12px; font-size: 0.775rem; font-weight: 500;">
+                                        <span>○</span> STANDBY
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; color: var(--yt-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="{{ stream.source_display }}">
+                                {{ stream.source_display }}
+                            </div>
+                        </td>
+                        <td style="font-size: 0.8rem; color: #3ea6ff; font-weight: 500;">
+                            720p30 2500k
+                        </td>
+                        <td style="font-size: 0.825rem; color: var(--yt-text-secondary);" id="uptime-{{ stream.id }}">
+                            {{ stream.uptime_seconds }}s
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="yt-table-actions" style="justify-content: flex-end; gap: 0.5rem;">
+                                <!-- Start / Stop button -->
+                                <div id="action-btn-wrap-{{ stream.id }}">
+                                    {% if stream.is_running %}
+                                        <button type="button" class="yt-btn yt-btn-danger yt-btn-sm" onclick="stopStream({{ stream.id }})">
+                                            <span>⏹️ END</span>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="yt-btn yt-btn-red yt-btn-sm" onclick="startStream({{ stream.id }})">
+                                            <span>🔴 GO LIVE</span>
+                                        </button>
+                                    {% endif %}
+                                </div>
+
+                                <!-- View Details button -->
+                                <a href="/stream/{{ stream.id }}" class="yt-btn-icon" title="Open stream details" style="display: inline-flex; align-items: center; justify-content: center; color: #3ea6ff; text-decoration: none;" onclick="event.stopPropagation()">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                    </svg>
+                                </a>
+
+                                <!-- View logs button -->
+                                <button type="button" class="yt-btn-icon" title="View FFmpeg logs" onclick="openLogsModal({{ stream.id }}, '{{ stream.title }}')">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm-6-4h8v2h-8z"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Edit button -->
+                                <button type="button" class="yt-btn-icon" title="Edit broadcast configuration" onclick='openEditStreamModal({{ stream | tojson }})'>
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Delete button -->
+                                <button type="button" class="yt-btn-icon" style="color: #ff6b6b;" title="Delete broadcast" onclick="deleteStream({{ stream.id }}, '{{ stream.title }}')">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 3.5rem 2rem; text-align: center; color: var(--yt-text-secondary);">
+                        <div style="font-size: 1.15rem; font-weight: 500; color: #fff; margin-bottom: 0.5rem;">No live stream broadcasts configured yet</div>
+                        <div style="font-size: 0.85rem; color: #888; margin-bottom: 1.5rem;">Create your first 24/7 stream broadcast to send continuous looping video feeds to YouTube.</div>
+                        <button type="button" class="yt-btn yt-btn-primary" onclick="openCreateStreamModal()">
+                            CREATE STREAM
+                        </button>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Live Stream Modal -->
+<div id="createStreamModal" class="yt-modal-backdrop">
+    <div class="yt-modal" style="max-width: 600px;">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title">Create Live Stream Broadcast</div>
+            <button class="yt-btn-icon" onclick="closeCreateStreamModal()">✕</button>
+        </div>
+        <form id="createStreamForm" onsubmit="handleCreateStream(event)">
+            <div class="yt-modal-body">
+                <div class="yt-form-group">
+                    <label class="yt-label">Stream Title (e.g. 24/7 Lo-Fi Chill Beats)</label>
+                    <input type="text" id="createTitle" class="yt-input" placeholder="Give your live stream a title" required>
+                </div>
+
+                <div class="yt-form-group">
+                    <label class="yt-label">YouTube RTMP URL</label>
+                    <input type="text" id="createUrl" class="yt-input" value="rtmp://a.rtmp.youtube.com/live2" required>
+                </div>
+
+                <div class="yt-form-group">
+                    <label class="yt-label">YouTube Stream Key (Private Key from YouTube Studio)</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="password" id="createKey" class="yt-input" placeholder="Paste your stream key here..." required oninput="checkModalKey(this, 'createKeyWarning')">
+                        <button type="button" class="yt-btn yt-btn-secondary" onclick="toggleFieldPass('createKey', this)">
+                            SHOW
+                        </button>
+                    </div>
+                    <div id="createKeyWarning" style="display: none; color: #ff6b6b; font-size: 0.775rem; margin-top: 4px;">
+                        ⚠️ Warning: You pasted a URL. Please paste your Stream Key (e.g. xxxx-xxxx-xxxx-xxxx) instead.
+                    </div>
+                </div>
+
+                <div class="yt-form-group">
+                    <label class="yt-label">Broadcast Output Mode (24/7 Loop)</label>
+                    <div style="display: flex; gap: 1.25rem; margin-top: 0.4rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--yt-text-primary); font-size: 0.9rem;">
+                            <input type="radio" name="create_source_type" value="playlist" checked onchange="switchModalSource('create', 'playlist')">
+                            <span>📑 Playlist (24/7 Seamless Loop)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--yt-text-primary); font-size: 0.9rem;">
+                            <input type="radio" name="create_source_type" value="video" onchange="switchModalSource('create', 'video')">
+                            <span>🎬 Single Video (Loop)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Playlist select -->
+                <div id="createPlaylistGroup" class="yt-form-group">
+                    <label class="yt-label">Select Playlist</label>
+                    {% if playlists %}
+                        <select id="createPlaylistSelect" class="yt-input">
+                            {% for playlist in playlists %}
+                                <option value="{{ playlist.id }}">{{ playlist.name }} ({{ playlist.video_count }} videos)</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <div style="color: #888; font-size: 0.825rem;">No playlists found. <a href="/upload" style="color: var(--yt-blue);">Create playlist</a>.</div>
+                    {% endif %}
+                </div>
+
+                <!-- Video select -->
+                <div id="createVideoGroup" class="yt-form-group" style="display: none;">
+                    <label class="yt-label">Select Video</label>
+                    {% if videos %}
+                        <select id="createVideoSelect" class="yt-input">
+                            {% for video in videos %}
+                                <option value="{{ video.filename }}">{{ video.title }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <div style="color: #888; font-size: 0.825rem;">No videos uploaded. <a href="/upload" style="color: var(--yt-blue);">Upload videos</a>.</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="yt-modal-footer">
+                <button type="button" class="yt-btn yt-btn-secondary" onclick="closeCreateStreamModal()">CANCEL</button>
+                <button type="submit" class="yt-btn yt-btn-primary">CREATE STREAM</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Live Stream Modal -->
+<div id="editStreamModal" class="yt-modal-backdrop">
+    <div class="yt-modal" style="max-width: 600px;">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title">Edit Live Stream Broadcast</div>
+            <button class="yt-btn-icon" onclick="closeEditStreamModal()">✕</button>
+        </div>
+        <form id="editStreamForm" onsubmit="handleEditStream(event)">
+            <input type="hidden" id="editStreamId">
+            <div class="yt-modal-body">
+                <div class="yt-form-group">
+                    <label class="yt-label">Stream Title</label>
+                    <input type="text" id="editTitle" class="yt-input" required>
+                </div>
+
+                <div class="yt-form-group">
+                    <label class="yt-label">YouTube RTMP URL</label>
+                    <input type="text" id="editUrl" class="yt-input" required>
+                </div>
+
+                <div class="yt-form-group">
+                    <label class="yt-label">YouTube Stream Key</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="password" id="editKey" class="yt-input" required oninput="checkModalKey(this, 'editKeyWarning')">
+                        <button type="button" class="yt-btn yt-btn-secondary" onclick="toggleFieldPass('editKey', this)">
+                            SHOW
+                        </button>
+                    </div>
+                    <div id="editKeyWarning" style="display: none; color: #ff6b6b; font-size: 0.775rem; margin-top: 4px;">
+                        ⚠️ Warning: You pasted a URL. Please paste your Stream Key instead.
+                    </div>
+                </div>
+
+                <div class="yt-form-group">
+                    <label class="yt-label">Broadcast Output Mode</label>
+                    <div style="display: flex; gap: 1.25rem; margin-top: 0.4rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--yt-text-primary); font-size: 0.9rem;">
+                            <input type="radio" name="edit_source_type" id="editRadioPlaylist" value="playlist" onchange="switchModalSource('edit', 'playlist')">
+                            <span>📑 Playlist (24/7 Loop)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--yt-text-primary); font-size: 0.9rem;">
+                            <input type="radio" name="edit_source_type" id="editRadioVideo" value="video" onchange="switchModalSource('edit', 'video')">
+                            <span>🎬 Single Video (Loop)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Playlist select -->
+                <div id="editPlaylistGroup" class="yt-form-group">
+                    <label class="yt-label">Select Playlist</label>
+                    {% if playlists %}
+                        <select id="editPlaylistSelect" class="yt-input">
+                            {% for playlist in playlists %}
+                                <option value="{{ playlist.id }}">{{ playlist.name }} ({{ playlist.video_count }} videos)</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+
+                <!-- Video select -->
+                <div id="editVideoGroup" class="yt-form-group" style="display: none;">
+                    <label class="yt-label">Select Video</label>
+                    {% if videos %}
+                        <select id="editVideoSelect" class="yt-input">
+                            {% for video in videos %}
+                                <option value="{{ video.filename }}">{{ video.title }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="yt-modal-footer">
+                <button type="button" class="yt-btn yt-btn-secondary" onclick="closeEditStreamModal()">CANCEL</button>
+                <button type="submit" class="yt-btn yt-btn-primary">SAVE CHANGES</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stream FFmpeg Logs Modal -->
+<div id="logsModal" class="yt-modal-backdrop">
+    <div class="yt-modal" style="max-width: 750px;">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title" id="logsModalTitle">FFmpeg Broadcast Logs</div>
+            <button class="yt-btn-icon" onclick="closeLogsModal()">✕</button>
+        </div>
+        <div class="yt-modal-body" style="background: #0d0d0d;">
+            <div id="modalLogBox" style="font-family: monospace; font-size: 0.775rem; color: #a3e635; max-height: 320px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;">
+                Loading live logs...
+            </div>
+        </div>
+        <div class="yt-modal-footer">
+            <button type="button" class="yt-btn yt-btn-secondary" onclick="closeLogsModal()">CLOSE</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.stream-row-clickable:hover {
+    background: rgba(62, 166, 255, 0.05) !important;
+    box-shadow: inset 2px 0 0 #3ea6ff;
+}
+</style>
+<script>
+    let activeLogStreamId = null;
+
+    function navigateToStream(event, streamId) {
+        // Don't navigate if user clicked on a button or a link inside the row
+        if (event.target.closest('button') || event.target.closest('a')) return;
+        window.location.href = `/stream/${streamId}`;
+    }
+    let logPollTimer = null;
+
+    function checkModalKey(elem, warningId) {
+        const val = elem.value.trim();
+        const warning = document.getElementById(warningId);
+        if (val.startsWith('rtmp://') || val.startsWith('http://') || val.startsWith('https://')) {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    }
+
+    function toggleFieldPass(fieldId, btn) {
+        const input = document.getElementById(fieldId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerText = 'HIDE';
+        } else {
+            input.type = 'password';
+            btn.innerText = 'SHOW';
+        }
+    }
+
+    function switchModalSource(prefix, type) {
+        const plGroup = document.getElementById(`${prefix}PlaylistGroup`);
+        const vidGroup = document.getElementById(`${prefix}VideoGroup`);
+        if (type === 'playlist') {
+            plGroup.style.display = 'block';
+            vidGroup.style.display = 'none';
+        } else {
+            plGroup.style.display = 'none';
+            vidGroup.style.display = 'block';
+        }
+    }
+
+    function openCreateStreamModal() {
+        document.getElementById('createStreamModal').classList.add('active');
+    }
+
+    function closeCreateStreamModal() {
+        document.getElementById('createStreamModal').classList.remove('active');
+    }
+
+    function handleCreateStream(e) {
+        e.preventDefault();
+        const title = document.getElementById('createTitle').value.trim();
+        const url = document.getElementById('createUrl').value.trim();
+        const key = document.getElementById('createKey').value.trim();
+        const sourceType = document.querySelector('input[name="create_source_type"]:checked').value;
+        const selectedSource = sourceType === 'playlist' 
+            ? document.getElementById('createPlaylistSelect').value 
+            : document.getElementById('createVideoSelect').value;
+
+        if (key.startsWith('rtmp://') || key.startsWith('http')) {
+            showToast('You entered a URL in the Stream Key field. Please paste the stream key.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('stream_url', url);
+        formData.append('stream_key', key);
+        formData.append('source_type', sourceType);
+        formData.append('selected_source', selectedSource);
+
+        fetch('/api/streams/create', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Stream "${title}" created successfully`);
+                closeCreateStreamModal();
+                document.getElementById('createStreamForm').reset();
+                // Add new row to table without reload
+                const tbody = document.getElementById('streamsTableBody');
+                const newId = data.stream_id;
+                const keyMask = '••••••••' + (key.length >= 4 ? key.slice(-4) : '••••');
+                const sourceLabel = sourceType === 'playlist' ? 'Playlist' : `Video: ${selectedSource}`;
+                // Remove empty-state row if present
+                const emptyRow = tbody.querySelector('td[colspan]');
+                if (emptyRow) emptyRow.closest('tr').remove();
+                const tr = document.createElement('tr');
+                tr.id = `stream-row-${newId}`;
+                tr.className = 'stream-row-clickable';
+                tr.style.cssText = 'cursor:pointer;transition:background 0.15s;';
+                tr.onclick = (ev) => navigateToStream(ev, newId);
+                tr.innerHTML = `
+                    <td>
+                        <div style="display:flex;align-items:center;gap:0.85rem;">
+                            <div style="width:36px;height:36px;border-radius:8px;background:#282828;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#888;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 12c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5S9 12.83 9 12zm7.07-7.07l-1.41 1.41A7.97 7.97 0 0 1 18 12c0 2.21-.89 4.21-2.34 5.66l1.41 1.41A9.97 9.97 0 0 0 20 12c0-2.76-1.12-5.26-2.93-7.07zm-10.14 0A9.97 9.97 0 0 0 4 12c0 2.76 1.12 5.26 2.93 7.07l1.41-1.41A7.97 7.97 0 0 1 6 12c0-2.21.89-4.21 2.34-5.66L6.93 4.93z"/></svg>
+                            </div>
+                            <div style="overflow:hidden;">
+                                <div style="font-weight:600;font-size:0.95rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;">${title}</div>
+                                <div style="font-size:0.775rem;color:#888;margin-top:2px;">Key: ${keyMask}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><div id="status-badge-${newId}"><span style="display:inline-flex;align-items:center;gap:6px;background:#222;border:1px solid #333;color:#888;padding:3px 8px;border-radius:12px;font-size:0.775rem;font-weight:500;"><span>○</span> STANDBY</span></div></td>
+                    <td><div style="font-size:0.85rem;color:var(--yt-text-primary);">${sourceLabel}</div></td>
+                    <td style="font-size:0.8rem;color:#3ea6ff;font-weight:500;">720p30 2500k</td>
+                    <td style="font-size:0.825rem;color:var(--yt-text-secondary);" id="uptime-${newId}">0s</td>
+                    <td style="text-align:right;">
+                        <div class="yt-table-actions" style="justify-content:flex-end;gap:0.5rem;">
+                            <div id="action-btn-wrap-${newId}">
+                                <button type="button" class="yt-btn yt-btn-red yt-btn-sm" onclick="startStream(${newId})"><span>🔴 GO LIVE</span></button>
+                            </div>
+                            <a href="/stream/${newId}" class="yt-btn-icon" title="Open stream details" style="display:inline-flex;align-items:center;justify-content:center;color:#3ea6ff;text-decoration:none;" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            </a>
+                            <button type="button" class="yt-btn-icon" title="View FFmpeg logs" onclick="openLogsModal(${newId}, '${title.replace(/'/g,"&apos;")}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm-6-4h8v2h-8z"/></svg></button>
+                            <button type="button" class="yt-btn-icon" style="color:#ff6b6b;" title="Delete broadcast" onclick="deleteStream(${newId}, '${title.replace(/'/g,"&apos;")}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+                        </div>
+                    </td>`;
+                tbody.appendChild(tr);
+            } else {
+                showToast(data.error || 'Failed to create stream', 'error');
+            }
+        })
+        .catch(() => showToast('Error creating stream', 'error'));
+    }
+
+    function openEditStreamModal(stream) {
+        document.getElementById('editStreamId').value = stream.id;
+        document.getElementById('editTitle').value = stream.title;
+        document.getElementById('editUrl').value = stream.stream_url;
+        document.getElementById('editKey').value = stream.stream_key;
+
+        if (stream.source_type === 'video') {
+            document.getElementById('editRadioVideo').checked = true;
+            switchModalSource('edit', 'video');
+            const sel = document.getElementById('editVideoSelect');
+            if (sel) sel.value = stream.selected_source;
+        } else {
+            document.getElementById('editRadioPlaylist').checked = true;
+            switchModalSource('edit', 'playlist');
+            const sel = document.getElementById('editPlaylistSelect');
+            if (sel) sel.value = stream.selected_source;
+        }
+
+        document.getElementById('editStreamModal').classList.add('active');
+    }
+
+    function closeEditStreamModal() {
+        document.getElementById('editStreamModal').classList.remove('active');
+    }
+
+    function handleEditStream(e) {
+        e.preventDefault();
+        const streamId = document.getElementById('editStreamId').value;
+        const title = document.getElementById('editTitle').value.trim();
+        const url = document.getElementById('editUrl').value.trim();
+        const key = document.getElementById('editKey').value.trim();
+        const sourceType = document.querySelector('input[name="edit_source_type"]:checked').value;
+        const selectedSource = sourceType === 'playlist' 
+            ? document.getElementById('editPlaylistSelect').value 
+            : document.getElementById('editVideoSelect').value;
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('stream_url', url);
+        formData.append('stream_key', key);
+        formData.append('source_type', sourceType);
+        formData.append('selected_source', selectedSource);
+
+        fetch(`/api/streams/${streamId}/edit`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Stream "${title}" updated`);
+                closeEditStreamModal();
+                // Update title in the row
+                const row = document.getElementById(`stream-row-${streamId}`);
+                if (row) {
+                    const titleDiv = row.querySelector('[style*="font-weight: 600"]');
+                    if (titleDiv) titleDiv.textContent = title;
+                }
+            } else {
+                showToast(data.error || 'Failed to update stream', 'error');
+            }
+        })
+        .catch(() => showToast('Error updating stream', 'error'));
+    }
+
+    function startStream(streamId) {
+        fetch(`/api/streams/${streamId}/start`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Stream broadcast started 🔴');
+                updateRowStatus(streamId, true);
+            } else {
+                showToast(data.error || 'Failed to start stream', 'error');
+            }
+        })
+        .catch(() => showToast('Error starting stream', 'error'));
+    }
+
+    function stopStream(streamId) {
+        fetch(`/api/streams/${streamId}/stop`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Stream stopped ⏹️');
+                updateRowStatus(streamId, false);
+            } else {
+                showToast(data.error || 'Failed to stop stream', 'error');
+            }
+        })
+        .catch(() => showToast('Error stopping stream', 'error'));
+    }
+
+    function updateRowStatus(streamId, isRunning) {
+        const badge = document.getElementById(`status-badge-${streamId}`);
+        const btnWrap = document.getElementById(`action-btn-wrap-${streamId}`);
+        const icon = document.querySelector(`#stream-row-${streamId} [style*="color:"]`);
+        if (badge) {
+            badge.innerHTML = isRunning
+                ? `<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(43,166,64,0.15);border:1px solid #2ba640;color:#2ba640;padding:3px 8px;border-radius:12px;font-size:0.775rem;font-weight:600;"><span>●</span> LIVE 24/7</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:6px;background:#222;border:1px solid #333;color:#888;padding:3px 8px;border-radius:12px;font-size:0.775rem;font-weight:500;"><span>○</span> STANDBY</span>`;
+        }
+        if (btnWrap) {
+            btnWrap.innerHTML = isRunning
+                ? `<button type="button" class="yt-btn yt-btn-danger yt-btn-sm" onclick="stopStream(${streamId})"><span>⏹️ END</span></button>`
+                : `<button type="button" class="yt-btn yt-btn-red yt-btn-sm" onclick="startStream(${streamId})"><span>🔴 GO LIVE</span></button>`;
+        }
+        const uptime = document.getElementById(`uptime-${streamId}`);
+        if (uptime && !isRunning) uptime.innerText = '0s';
+    }
+
+    function deleteStream(streamId, title) {
+        if (!confirm(`Delete stream "${title}" permanently?`)) return;
+
+        fetch(`/api/streams/${streamId}/delete`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Stream "${title}" deleted`);
+                const row = document.getElementById(`stream-row-${streamId}`);
+                if (row) row.remove();
+            } else {
+                showToast('Failed to delete stream', 'error');
+            }
+        })
+        .catch(() => showToast('Error deleting stream', 'error'));
+    }
+
+    function openLogsModal(streamId, title) {
+        activeLogStreamId = streamId;
+        document.getElementById('logsModalTitle').innerText = `FFmpeg Broadcast Logs - "${title}"`;
+        document.getElementById('logsModal').classList.add('active');
+        fetchStreamLogs();
+        if (logPollTimer) clearInterval(logPollTimer);
+        logPollTimer = setInterval(fetchStreamLogs, 2500);
+    }
+
+    function closeLogsModal() {
+        document.getElementById('logsModal').classList.remove('active');
+        activeLogStreamId = null;
+        if (logPollTimer) clearInterval(logPollTimer);
+    }
+
+    function fetchStreamLogs() {
+        if (!activeLogStreamId) return;
+        fetch('/api/stream_status')
+        .then(r => r.json())
+        .then(data => {
+            const streamInfo = data.streams ? data.streams[activeLogStreamId] : null;
+            const logBox = document.getElementById('modalLogBox');
+            if (streamInfo && streamInfo.recent_logs && streamInfo.recent_logs.length > 0) {
+                logBox.innerHTML = streamInfo.recent_logs.map(l => `<div>${l}</div>`).join('');
+                logBox.scrollTop = logBox.scrollHeight;
+            } else {
+                logBox.innerHTML = '<span style="color: #777;">No active log output yet. Start the stream to view live broadcast encoding logs.</span>';
+            }
+        })
+        .catch(() => {});
+    }
+
+    // Auto status polling every 3 seconds
+    setInterval(() => {
+        fetch('/api/stream_status')
+        .then(r => r.json())
+        .then(data => {
+            if (data.streams) {
+                for (const [sId, info] of Object.entries(data.streams)) {
+                    const badge = document.getElementById(`status-badge-${sId}`);
+                    const uptime = document.getElementById(`uptime-${sId}`);
+                    if (badge) {
+                        if (info.is_running) {
+                            badge.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(43, 166, 64, 0.15); border: 1px solid #2ba640; color: #2ba640; padding: 3px 8px; border-radius: 12px; font-size: 0.775rem; font-weight: 600;"><span>●</span> LIVE 24/7</span>`;
+                        } else {
+                            badge.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 6px; background: #222; border: 1px solid #333; color: #888; padding: 3px 8px; border-radius: 12px; font-size: 0.775rem; font-weight: 500;"><span>○</span> STANDBY</span>`;
+                        }
+                    }
+                    if (uptime && info.is_running) {
+                        uptime.innerText = `${info.uptime_seconds}s`;
+                    }
+                }
+            }
+        })
+        .catch(() => {});
+    }, 3000);
+</script>
+{% endblock %}

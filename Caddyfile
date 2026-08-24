@@ -1,0 +1,12 @@
+# Replace yourdomain.com with your actual domain or VPS IP
+# If you use a domain name, Caddy will automatically provision Let's Encrypt SSL!
+
+# Example for a real domain:
+# yourdomain.com {
+#     reverse_proxy web:8000
+# }
+
+# Example for just using the VPS IP (will serve over HTTP port 80):
+:80 {
+    reverse_proxy web:8000
+}

@@ -1,0 +1,914 @@
+:root {
+    --yt-main-bg: #0f0f0f;
+    --yt-sidebar-bg: #0f0f0f;
+    --yt-header-bg: #0f0f0f;
+    --yt-card-bg: #1e1e1e;
+    --yt-card-hover: #272727;
+    --yt-surface: #212121;
+    --yt-border: #303030;
+    --yt-border-light: #3f3f3f;
+    --yt-text-primary: #f1f1f1;
+    --yt-text-secondary: #aaaaaa;
+    --yt-text-disabled: #717171;
+    --yt-red: #ff0000;
+    --yt-red-hover: #cc0000;
+    --yt-blue: #3ea6ff;
+    --yt-blue-hover: #65b8ff;
+    --yt-btn-bg: #272727;
+    --yt-btn-hover: #3f3f3f;
+    --yt-active-menu: #272727;
+    --yt-chip-bg: #272727;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background-color: var(--yt-main-bg);
+    color: var(--yt-text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+svg {
+    max-width: 100%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Top App Header (YouTube Studio Top Bar) */
+.yt-header {
+    height: 56px;
+    background-color: var(--yt-header-bg);
+    border-bottom: 1px solid var(--yt-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.yt-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.yt-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--yt-text-primary);
+    transition: background 0.2s;
+}
+
+.yt-menu-icon:hover {
+    background-color: var(--yt-btn-bg);
+}
+
+.yt-logo-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--yt-text-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.5px;
+}
+
+.yt-logo-icon {
+    width: 28px;
+    height: 20px;
+    background: var(--yt-red);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.yt-logo-icon::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 8px solid #ffffff;
+    margin-left: 2px;
+}
+
+.yt-header-center {
+    flex: 1;
+    max-width: 500px;
+    margin: 0 2rem;
+}
+
+.yt-search-bar {
+    display: flex;
+    align-items: center;
+    background: #121212;
+    border: 1px solid var(--yt-border);
+    border-radius: 20px;
+    padding: 0 1rem;
+    height: 36px;
+}
+
+.yt-search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--yt-text-primary);
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.yt-search-bar input::placeholder {
+    color: var(--yt-text-disabled);
+}
+
+.yt-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.yt-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--yt-btn-bg);
+    border: 1px solid var(--yt-border);
+    color: var(--yt-text-primary);
+    padding: 0.45rem 0.9rem;
+    border-radius: 18px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.yt-create-btn:hover {
+    background: var(--yt-btn-hover);
+    border-color: var(--yt-border-light);
+}
+
+.yt-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #c00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Studio Layout Container */
+.yt-studio-layout {
+    display: flex;
+    min-height: calc(100vh - 56px);
+}
+
+/* Studio Sidebar */
+.yt-sidebar {
+    width: 256px;
+    background: var(--yt-sidebar-bg);
+    border-right: 1px solid var(--yt-border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.yt-channel-card {
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-bottom: 1px solid var(--yt-border);
+}
+
+.yt-channel-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff0000 0%, #7928ca 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.yt-channel-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--yt-text-primary);
+}
+
+.yt-channel-subtitle {
+    font-size: 0.75rem;
+    color: var(--yt-text-secondary);
+    margin-top: 2px;
+}
+
+.yt-nav-list {
+    list-style: none;
+    padding: 0.75rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.yt-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--yt-text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s;
+}
+
+.yt-nav-item:hover {
+    background: var(--yt-active-menu);
+    color: var(--yt-text-primary);
+}
+
+.yt-nav-item.active {
+    background: var(--yt-active-menu);
+    color: var(--yt-red);
+    border-left-color: var(--yt-red);
+    font-weight: 600;
+}
+
+.yt-nav-item svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.yt-sidebar-footer {
+    margin-top: auto;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--yt-border);
+    font-size: 0.75rem;
+    color: var(--yt-text-disabled);
+}
+
+/* Studio Main Body */
+.yt-main-content {
+    flex: 1;
+    padding: 2rem 2.5rem;
+    background: #141414;
+    overflow-y: auto;
+    max-width: 1500px;
+}
+
+/* Studio Page Header */
+.yt-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+}
+
+.yt-page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--yt-text-primary);
+    letter-spacing: -0.3px;
+}
+
+.yt-page-desc {
+    font-size: 0.875rem;
+    color: var(--yt-text-secondary);
+    margin-top: 4px;
+}
+
+/* Tabs Header (Studio Style) */
+.yt-tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--yt-border);
+    margin-bottom: 1.5rem;
+}
+
+.yt-tab {
+    padding: 0.75rem 0.5rem;
+    color: var(--yt-text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.yt-tab:hover {
+    color: var(--yt-text-primary);
+}
+
+.yt-tab.active {
+    color: var(--yt-blue);
+    border-bottom-color: var(--yt-blue);
+    font-weight: 600;
+}
+
+/* Studio Section Card */
+.yt-card {
+    background: var(--yt-card-bg);
+    border: 1px solid var(--yt-border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+}
+
+.yt-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.yt-card-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--yt-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* YouTube Content Table */
+.yt-table-container {
+    background: #181818;
+    border: 1px solid var(--yt-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.yt-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.yt-table th {
+    background: #1f1f1f;
+    color: var(--yt-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--yt-border);
+}
+
+.yt-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+    color: var(--yt-text-primary);
+    font-size: 0.875rem;
+}
+
+.yt-table tr:last-child td {
+    border-bottom: none;
+}
+
+.yt-table tr:hover {
+    background: #222222;
+}
+
+.yt-table-video-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.yt-table-thumb-wrap {
+    position: relative;
+    width: 120px;
+    height: 68px;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.yt-table-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.yt-table-video-info {
+    overflow: hidden;
+}
+
+.yt-table-video-title {
+    font-weight: 600;
+    color: var(--yt-text-primary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 380px;
+}
+
+.yt-table-video-filename {
+    font-size: 0.75rem;
+    color: var(--yt-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 380px;
+}
+
+.yt-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* YouTube Standard Buttons */
+.yt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 18px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s;
+}
+
+.yt-btn-primary {
+    background: var(--yt-blue);
+    color: #0f0f0f;
+    font-weight: 600;
+}
+
+.yt-btn-primary:hover {
+    background: var(--yt-blue-hover);
+}
+
+.yt-btn-red {
+    background: var(--yt-red);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.yt-btn-red:hover {
+    background: var(--yt-red-hover);
+}
+
+.yt-btn-secondary {
+    background: var(--yt-btn-bg);
+    color: var(--yt-text-primary);
+    border: 1px solid var(--yt-border);
+}
+
+.yt-btn-secondary:hover {
+    background: var(--yt-btn-hover);
+    border-color: var(--yt-border-light);
+}
+
+.yt-btn-danger {
+    background: rgba(255, 0, 0, 0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.yt-btn-danger:hover {
+    background: rgba(255, 0, 0, 0.25);
+}
+
+.yt-btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 14px;
+}
+
+.yt-btn-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--yt-text-secondary);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.yt-btn-icon:hover {
+    background: var(--yt-btn-hover);
+    color: var(--yt-text-primary);
+}
+
+/* Upload Dropzone (YouTube Studio Style) */
+.yt-upload-dropzone {
+    border: 2px dashed var(--yt-border-light);
+    border-radius: 16px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    background: #181818;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.yt-upload-dropzone:hover, .yt-upload-dropzone.dragover {
+    border-color: var(--yt-blue);
+    background: rgba(62, 166, 255, 0.04);
+}
+
+.yt-upload-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #282828;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: var(--yt-text-secondary);
+    transition: transform 0.2s, color 0.2s;
+}
+
+.yt-upload-dropzone:hover .yt-upload-circle {
+    color: var(--yt-blue);
+    transform: translateY(-4px);
+}
+
+.yt-upload-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--yt-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.yt-upload-subtitle {
+    font-size: 0.85rem;
+    color: var(--yt-text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* Studio Realtime Upload Previews */
+.yt-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.yt-preview-card {
+    background: #181818;
+    border: 1px solid var(--yt-border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.yt-preview-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.yt-preview-thumb video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.yt-preview-info {
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.yt-preview-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--yt-text-primary);
+}
+
+/* Studio Progress Bar */
+.yt-progress-container {
+    margin-top: 1.5rem;
+    background: #181818;
+    border: 1px solid var(--yt-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: none;
+}
+
+.yt-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.yt-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #333333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.yt-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--yt-blue);
+    transition: width 0.15s ease;
+}
+
+/* Playlist Layout (YouTube Studio Style) */
+.yt-playlist-item {
+    background: #181818;
+    border: 1px solid var(--yt-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.yt-playlist-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.yt-playlist-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--yt-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.yt-chip {
+    background: var(--yt-chip-bg);
+    border: 1px solid var(--yt-border);
+    color: var(--yt-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.yt-playlist-videos {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--yt-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.yt-playlist-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem;
+    background: #212121;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+/* Form Controls (Studio Inputs) */
+.yt-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.yt-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--yt-text-secondary);
+}
+
+.yt-input {
+    width: 100%;
+    height: 42px;
+    background: #121212;
+    border: 1px solid var(--yt-border);
+    border-radius: 6px;
+    padding: 0 1rem;
+    color: var(--yt-text-primary);
+    font-size: 0.925rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.yt-input:focus {
+    border-color: var(--yt-blue);
+}
+
+select.yt-input {
+    cursor: pointer;
+}
+
+/* Live Control Room (Stream Page) */
+.yt-stream-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 1.5rem;
+}
+
+.yt-stream-preview-box {
+    aspect-ratio: 16 / 9;
+    max-height: 380px;
+    background: #000000;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--yt-border);
+}
+
+.yt-live-chip {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--yt-red);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Modals */
+.yt-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+.yt-modal-backdrop.active {
+    display: flex;
+}
+
+.yt-modal {
+    background: #212121;
+    border: 1px solid var(--yt-border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 680px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+}
+
+.yt-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--yt-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.yt-modal-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--yt-text-primary);
+}
+
+.yt-modal-body {
+    padding: 1.5rem;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+.yt-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--yt-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: #181818;
+}
+
+/* Toast Notification (YouTube Snackbars) */
+.yt-toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 2000;
+}
+
+.yt-toast {
+    background: #323232;
+    color: #ffffff;
+    padding: 0.85rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    animation: toastSlide 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes toastSlide {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .yt-stream-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .yt-studio-layout {
+        flex-direction: column;
+    }
+    .yt-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--yt-border);
+    }
+    .yt-nav-list {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.5rem;
+    }
+    .yt-nav-item {
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.5rem 1rem;
+    }
+    .yt-nav-item.active {
+        border-bottom-color: var(--yt-red);
+    }
+    .yt-main-content {
+        padding: 1.25rem;
+    }
+}

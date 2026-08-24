@@ -1,0 +1,685 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="yt-page-header">
+    <div>
+        <h1 class="yt-page-title">Channel Content</h1>
+        <p class="yt-page-desc">Manage all uploaded stream videos, thumbnails, and 24/7 continuous playlists.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <button type="button" class="yt-btn yt-btn-secondary" onclick="openCreatePlaylistModal()">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            <span>New Playlist</span>
+        </button>
+        <button type="button" class="yt-btn yt-btn-primary" onclick="showUploadModal()">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+            </svg>
+            <span>UPLOAD VIDEOS</span>
+        </button>
+    </div>
+</div>
+
+<!-- Tabs (Videos / Playlists) -->
+<div class="yt-tabs">
+    <div class="yt-tab active" id="tabVideosBtn" onclick="switchContentTab('videos')">
+        Videos ({{ videos|length }})
+    </div>
+    <div class="yt-tab" id="tabPlaylistsBtn" onclick="switchContentTab('playlists')">
+        Playlists ({{ playlists|length }})
+    </div>
+</div>
+
+<!-- Tab 1: Videos Content Table -->
+<div id="tabVideosSection">
+    <div class="yt-table-container">
+        <table class="yt-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox"></th>
+                    <th>Video</th>
+                    <th style="width: 140px;">Visibility</th>
+                    <th style="width: 150px;">Date Uploaded</th>
+                    <th style="width: 120px;">File Size</th>
+                    <th style="width: 140px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="videoTableBody">
+                {% if videos %}
+                    {% for video in videos %}
+                        <tr id="video-row-{{ loop.index }}">
+                            <td><input type="checkbox" class="video-row-chk" value="{{ video.filename }}"></td>
+                            <td>
+                                <div class="yt-table-video-cell">
+                                    <div class="yt-table-thumb-wrap">
+                                        {% if video.thumbnail %}
+                                            <img src="{{ video.thumbnail }}" alt="{{ video.title }}" class="yt-table-thumb-img" loading="lazy">
+                                        {% else %}
+                                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #717171; background: #222;">
+                                                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                                    <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                                                </svg>
+                                            </div>
+                                        {% endif %}
+                                        <span class="yt-time-badge" style="bottom: 4px; right: 4px; font-size: 0.7rem; padding: 1px 4px;">{{ video.size_bytes | format_size }}</span>
+                                    </div>
+                                    <div class="yt-table-video-info">
+                                        <div class="yt-table-video-title" title="{{ video.title }}">{{ video.title }}</div>
+                                        <div class="yt-table-video-filename" title="{{ video.filename }}">{{ video.filename }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="display: inline-flex; align-items: center; gap: 4px; color: #2ba640; font-size: 0.8rem; font-weight: 500;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                    </svg>
+                                    Stream Ready
+                                </span>
+                            </td>
+                            <td style="color: var(--yt-text-secondary); font-size: 0.825rem;">
+                                {{ video.uploaded_at or 'Recently' }}
+                            </td>
+                            <td style="color: var(--yt-text-secondary); font-size: 0.825rem;">
+                                {{ video.size_bytes | format_size }}
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="yt-table-actions" style="justify-content: flex-end;">
+                                    <button class="yt-btn-icon" title="Preview video" onclick="previewVideo('/uploads/{{ video.filename }}', '{{ video.title }}')">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="yt-btn-icon" title="Add to playlist" onclick="promptAddToPlaylist('{{ video.filename }}')">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                            <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="yt-btn-icon" style="color: #ff6b6b;" title="Delete video" onclick="deleteVideo('{{ video.filename }}', 'video-row-{{ loop.index }}')">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="padding: 3rem; text-align: center; color: var(--yt-text-secondary);">
+                            <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">No videos uploaded yet</div>
+                            <div style="font-size: 0.85rem; color: var(--yt-text-disabled); margin-bottom: 1.5rem;">Upload video files to create playlists and broadcast 24/7.</div>
+                            <button type="button" class="yt-btn yt-btn-primary" onclick="showUploadModal()">
+                                UPLOAD VIDEOS
+                            </button>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tab 2: Playlists Manager -->
+<div id="tabPlaylistsSection" style="display: none;">
+    <div id="playlistsList">
+        {% if playlists %}
+            {% for playlist in playlists %}
+                <div class="yt-playlist-item" id="playlist-card-{{ playlist.id }}">
+                    <div class="yt-playlist-head">
+                        <div class="yt-playlist-name">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M19 9H2v2h17V9zm0-4H2v2h17V5zM2 15h13v-2H2v2zm15-2v6l5-3-5-3z"/>
+                            </svg>
+                            <span>{{ playlist.name }}</span>
+                            <span class="yt-chip">{{ playlist.video_count }} videos</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="yt-btn yt-btn-secondary yt-btn-sm" onclick="openAddToPlaylistModal({{ playlist.id }}, '{{ playlist.name }}')">
+                                <span>+</span> Add Videos
+                            </button>
+                            <button class="yt-btn yt-btn-danger yt-btn-sm" onclick="deletePlaylist({{ playlist.id }})">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if playlist.video_items %}
+                        <div class="yt-playlist-videos">
+                            {% for item in playlist.video_items %}
+                                <div class="yt-playlist-row" id="item-row-{{ item.id }}">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; overflow: hidden;">
+                                        <span style="color: var(--yt-text-secondary); font-size: 0.8rem;">{{ loop.index }}.</span>
+                                        <span style="color: var(--yt-text-primary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.title or item.video_filename }}</span>
+                                    </div>
+                                    <button class="yt-btn-icon" title="Remove from playlist" onclick="removePlaylistItem({{ playlist.id }}, {{ item.id }})">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="color: var(--yt-text-disabled); font-size: 0.825rem; margin-top: 0.75rem;">
+                            Empty playlist. Click "+ Add Videos" to add stream assets to this playlist.
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div style="padding: 3rem; text-align: center; color: var(--yt-text-secondary); background: #181818; border-radius: 8px;">
+                <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">No playlists created yet</div>
+                <div style="font-size: 0.85rem; color: var(--yt-text-disabled); margin-bottom: 1.5rem;">Create a playlist to group videos for 24/7 continuous stream looping.</div>
+                <button type="button" class="yt-btn yt-btn-secondary" onclick="openCreatePlaylistModal()">
+                    CREATE PLAYLIST
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- YouTube Studio Upload Dialog Modal -->
+<div id="uploadModal" class="yt-modal-backdrop">
+    <div class="yt-modal" style="max-width: 680px;">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title">Upload Videos</div>
+            <button class="yt-btn-icon" onclick="hideUploadModal()">✕</button>
+        </div>
+
+        <div class="yt-modal-body">
+            <!-- Dropzone Area -->
+            <div class="yt-upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" name="files" multiple accept="video/mp4,video/x-matroska,video/avi,video/quicktime,video/webm" style="display: none;">
+                
+                <div class="yt-upload-circle">
+                    <svg viewBox="0 0 24 24" width="44" height="44" fill="currentColor">
+                        <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                    </svg>
+                </div>
+                
+                <div class="yt-upload-title">Drag and drop video files to upload</div>
+                <div class="yt-upload-subtitle">Supports multiple MP4, MKV, AVI, MOV, WEBM. Real-time thumbnail extraction.</div>
+                
+                <button type="button" class="yt-btn yt-btn-primary" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">
+                    SELECT FILES
+                </button>
+            </div>
+
+            <!-- Client-side Realtime Previews (Before & during upload) -->
+            <div id="previewSection" style="display: none; margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div style="font-weight: 600; font-size: 0.9rem; color: var(--yt-text-primary);">
+                        Selected Assets (<span id="previewCount">0</span>)
+                    </div>
+                    <button type="button" class="yt-btn yt-btn-secondary yt-btn-sm" onclick="clearSelectedFiles()">Clear</button>
+                </div>
+
+                <div id="previewContainer" class="yt-preview-grid"></div>
+                
+                <!-- Studio Linear Progress Bar -->
+                <div id="progressWrapper" class="yt-progress-container">
+                    <div class="yt-progress-meta">
+                        <span id="uploadStatusText" style="color: var(--yt-text-primary);">Uploading files...</span>
+                        <span id="uploadPercentText" style="color: var(--yt-blue); font-weight: 600;">0%</span>
+                    </div>
+                    <div class="yt-progress-track">
+                        <div id="progressBar" class="yt-progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="yt-modal-footer">
+            <button type="button" class="yt-btn yt-btn-secondary" onclick="hideUploadModal()">CANCEL</button>
+            <button type="button" id="startUploadBtn" class="yt-btn yt-btn-primary" style="display: none;" onclick="uploadFiles()">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                </svg>
+                <span>UPLOAD</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Create Playlist Modal -->
+<div id="createPlaylistModal" class="yt-modal-backdrop">
+    <div class="yt-modal">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title">New Playlist</div>
+            <button class="yt-btn-icon" onclick="closeCreatePlaylistModal()">✕</button>
+        </div>
+        <form id="createPlaylistForm" onsubmit="handleCreatePlaylist(event)">
+            <div class="yt-modal-body">
+                <div class="yt-form-group">
+                    <label class="yt-label">Title (required)</label>
+                    <input type="text" id="newPlaylistName" class="yt-input" placeholder="Add a title for your playlist" required>
+                </div>
+                
+                <div class="yt-form-group">
+                    <label class="yt-label">Select Initial Videos</label>
+                    <div style="max-height: 200px; overflow-y: auto; background: #121212; border: 1px solid var(--yt-border); border-radius: 6px; padding: 0.75rem;">
+                        {% for video in videos %}
+                            <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.4rem 0; font-size: 0.875rem; cursor: pointer; color: var(--yt-text-primary);">
+                                <input type="checkbox" name="playlist_initial_videos" value="{{ video.filename }}">
+                                <span>{{ video.title }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="yt-modal-footer">
+                <button type="button" class="yt-btn yt-btn-secondary" onclick="closeCreatePlaylistModal()">CANCEL</button>
+                <button type="submit" class="yt-btn yt-btn-primary">CREATE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Video To Playlist Modal -->
+<div id="addToPlaylistModal" class="yt-modal-backdrop">
+    <div class="yt-modal">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title" id="addToPlaylistTitle">Add to Playlist</div>
+            <button class="yt-btn-icon" onclick="closeAddToPlaylistModal()">✕</button>
+        </div>
+        <div class="yt-modal-body">
+            <input type="hidden" id="targetPlaylistId">
+            <div class="yt-form-group">
+                <label class="yt-label">Select videos</label>
+                <div id="addToPlaylistCheckboxes" style="max-height: 240px; overflow-y: auto; background: #121212; border: 1px solid var(--yt-border); border-radius: 6px; padding: 0.75rem;">
+                    {% for video in videos %}
+                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.4rem 0; font-size: 0.875rem; cursor: pointer; color: var(--yt-text-primary);">
+                            <input type="checkbox" class="add-to-pl-chk" value="{{ video.filename }}">
+                            <span>{{ video.title }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="yt-modal-footer">
+            <button type="button" class="yt-btn yt-btn-secondary" onclick="closeAddToPlaylistModal()">CANCEL</button>
+            <button type="button" class="yt-btn yt-btn-primary" onclick="submitAddToPlaylist()">SAVE</button>
+        </div>
+    </div>
+</div>
+
+<!-- Video Preview Modal -->
+<div id="videoPreviewModal" class="yt-modal-backdrop">
+    <div class="yt-modal" style="max-width: 800px;">
+        <div class="yt-modal-header">
+            <div class="yt-modal-title" id="videoModalTitle">Video Preview</div>
+            <button class="yt-btn-icon" onclick="closeVideoPreview()">✕</button>
+        </div>
+        <div style="position: relative; padding-top: 56.25%; background: #000;">
+            <video id="modalVideoPlayer" controls style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: contain;"></video>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedFilesList = [];
+
+    // Tab switcher
+    function switchContentTab(tab) {
+        const videosBtn = document.getElementById('tabVideosBtn');
+        const playlistsBtn = document.getElementById('tabPlaylistsBtn');
+        const videosSec = document.getElementById('tabVideosSection');
+        const playlistsSec = document.getElementById('tabPlaylistsSection');
+
+        if (tab === 'videos') {
+            videosBtn.classList.add('active');
+            playlistsBtn.classList.remove('active');
+            videosSec.style.display = 'block';
+            playlistsSec.style.display = 'none';
+        } else {
+            playlistsBtn.classList.add('active');
+            videosBtn.classList.remove('active');
+            videosSec.style.display = 'none';
+            playlistsSec.style.display = 'block';
+        }
+    }
+
+    // Upload Modal controls
+    window.showUploadModal = function() {
+        document.getElementById('uploadModal').classList.add('active');
+    };
+
+    function hideUploadModal() {
+        document.getElementById('uploadModal').classList.remove('active');
+        clearSelectedFiles();
+    }
+
+    // Auto open upload modal if url contains ?action=upload
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('action') === 'upload') {
+            window.showUploadModal();
+        }
+    });
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        handleFilesSelected(dt.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFilesSelected(e.target.files);
+    });
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function handleFilesSelected(files) {
+        if (!files || files.length === 0) return;
+        for (let i = 0; i < files.length; i++) {
+            selectedFilesList.push(files[i]);
+        }
+        renderPreviews();
+    }
+
+    function renderPreviews() {
+        const previewSection = document.getElementById('previewSection');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewCount = document.getElementById('previewCount');
+        const startUploadBtn = document.getElementById('startUploadBtn');
+
+        if (selectedFilesList.length === 0) {
+            previewSection.style.display = 'none';
+            previewContainer.innerHTML = '';
+            startUploadBtn.style.display = 'none';
+            return;
+        }
+
+        previewSection.style.display = 'block';
+        startUploadBtn.style.display = 'inline-flex';
+        previewCount.innerText = selectedFilesList.length;
+        previewContainer.innerHTML = '';
+
+        selectedFilesList.forEach((file, index) => {
+            const card = document.createElement('div');
+            card.className = 'yt-preview-card';
+
+            const videoBox = document.createElement('div');
+            videoBox.className = 'yt-preview-thumb';
+
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(file);
+            video.muted = true;
+            video.playsInline = true;
+            video.onloadeddata = () => {
+                video.currentTime = 1;
+            };
+
+            videoBox.appendChild(video);
+
+            const info = document.createElement('div');
+            info.className = 'yt-preview-info';
+            info.innerHTML = `
+                <div class="yt-preview-name" title="${file.name}">${file.name}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.775rem; color: var(--yt-text-secondary);">
+                    <span>${formatBytes(file.size)}</span>
+                    <span style="color: var(--yt-red); cursor: pointer; font-weight: 500;" onclick="removeSelectedFile(${index})">Remove</span>
+                </div>
+            `;
+
+            card.appendChild(videoBox);
+            card.appendChild(info);
+            previewContainer.appendChild(card);
+        });
+    }
+
+    function removeSelectedFile(index) {
+        selectedFilesList.splice(index, 1);
+        renderPreviews();
+    }
+
+    function clearSelectedFiles() {
+        selectedFilesList = [];
+        fileInput.value = '';
+        renderPreviews();
+    }
+
+    function uploadFiles() {
+        if (selectedFilesList.length === 0) return;
+
+        const formData = new FormData();
+        selectedFilesList.forEach(file => {
+            formData.append('files', file);
+        });
+
+        const progressWrapper = document.getElementById('progressWrapper');
+        const progressBar = document.getElementById('progressBar');
+        const uploadPercentText = document.getElementById('uploadPercentText');
+        const uploadStatusText = document.getElementById('uploadStatusText');
+        const startUploadBtn = document.getElementById('startUploadBtn');
+
+        progressWrapper.style.display = 'block';
+        startUploadBtn.disabled = true;
+        startUploadBtn.innerHTML = '<span>Uploading...</span>';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload_videos', true);
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + '%';
+                uploadPercentText.innerText = `${percent}%`;
+                uploadStatusText.innerText = `Uploading ${selectedFilesList.length} files (${formatBytes(e.loaded)} / ${formatBytes(e.total)})...`;
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                uploadStatusText.innerText = 'Upload complete! Processing thumbnails...';
+                progressBar.style.width = '100%';
+                showToast(`Upload complete: ${selectedFilesList.length} videos added to table.`);
+                setTimeout(() => {
+                    // Close modal and refresh back to table
+                    hideUploadModal();
+                    window.location.href = '/upload';
+                }, 900);
+            } else {
+                showToast('Upload error occurred', 'error');
+                startUploadBtn.disabled = false;
+                startUploadBtn.innerHTML = '<span>UPLOAD</span>';
+            }
+        };
+
+        xhr.onerror = () => {
+            showToast('Network error during upload', 'error');
+            startUploadBtn.disabled = false;
+            startUploadBtn.innerHTML = '<span>UPLOAD</span>';
+        };
+
+        xhr.send(formData);
+    }
+
+    function previewVideo(videoUrl, title) {
+        const modal = document.getElementById('videoPreviewModal');
+        const player = document.getElementById('modalVideoPlayer');
+        const modalTitle = document.getElementById('videoModalTitle');
+        modalTitle.innerText = title;
+        player.src = videoUrl;
+        modal.classList.add('active');
+        player.play().catch(() => {});
+    }
+
+    function closeVideoPreview() {
+        const modal = document.getElementById('videoPreviewModal');
+        const player = document.getElementById('modalVideoPlayer');
+        player.pause();
+        player.src = '';
+        modal.classList.remove('active');
+    }
+
+    function deleteVideo(filename, rowId) {
+        if (!confirm(`Delete video "${filename}" permanently?`)) return;
+
+        const formData = new FormData();
+        formData.append('filename', filename);
+
+        fetch('/api/delete_video', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Video deleted');
+                const row = document.getElementById(rowId);
+                if (row) row.remove();
+            }
+        })
+        .catch(() => showToast('Error deleting video', 'error'));
+    }
+
+    function openCreatePlaylistModal() {
+        document.getElementById('createPlaylistModal').classList.add('active');
+    }
+
+    function closeCreatePlaylistModal() {
+        document.getElementById('createPlaylistModal').classList.remove('active');
+    }
+
+    function handleCreatePlaylist(e) {
+        e.preventDefault();
+        const name = document.getElementById('newPlaylistName').value.trim();
+        if (!name) return;
+
+        const checkboxes = document.querySelectorAll('input[name="playlist_initial_videos"]:checked');
+        const formData = new FormData();
+        formData.append('name', name);
+        checkboxes.forEach(cb => formData.append('videos', cb.value));
+
+        fetch('/api/playlists', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Playlist "${name}" created`);
+                closeCreatePlaylistModal();
+                setTimeout(() => window.location.reload(), 500);
+            }
+        })
+        .catch(() => showToast('Error creating playlist', 'error'));
+    }
+
+    function openAddToPlaylistModal(playlistId, playlistName) {
+        document.getElementById('targetPlaylistId').value = playlistId;
+        document.getElementById('addToPlaylistTitle').innerText = `Add Videos to "${playlistName}"`;
+        document.querySelectorAll('.add-to-pl-chk').forEach(c => c.checked = false);
+        document.getElementById('addToPlaylistModal').classList.add('active');
+    }
+
+    function promptAddToPlaylist(filename) {
+        const playlists = {{ playlists | tojson }};
+        if (!playlists || playlists.length === 0) {
+            showToast('Please create a playlist first', 'error');
+            openCreatePlaylistModal();
+            return;
+        }
+        openAddToPlaylistModal(playlists[0].id, playlists[0].name);
+        document.querySelectorAll('.add-to-pl-chk').forEach(c => {
+            if (c.value === filename) c.checked = true;
+        });
+    }
+
+    function closeAddToPlaylistModal() {
+        document.getElementById('addToPlaylistModal').classList.remove('active');
+    }
+
+    function submitAddToPlaylist() {
+        const playlistId = document.getElementById('targetPlaylistId').value;
+        const checked = document.querySelectorAll('.add-to-pl-chk:checked');
+        if (checked.length === 0) {
+            showToast('Select at least one video', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        checked.forEach(c => formData.append('videos', c.value));
+
+        fetch(`/api/playlists/${playlistId}/add_videos`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Playlist updated');
+                closeAddToPlaylistModal();
+                setTimeout(() => window.location.reload(), 500);
+            }
+        })
+        .catch(() => showToast('Failed to add videos', 'error'));
+    }
+
+    function removePlaylistItem(playlistId, itemId) {
+        const formData = new FormData();
+        formData.append('item_id', itemId);
+
+        fetch(`/api/playlists/${playlistId}/remove_item`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById(`item-row-${itemId}`);
+                if (row) row.remove();
+                showToast('Removed from playlist');
+            }
+        })
+        .catch(() => showToast('Error removing video', 'error'));
+    }
+
+    function deletePlaylist(playlistId) {
+        if (!confirm('Delete this playlist?')) return;
+
+        fetch(`/api/playlists/${playlistId}/delete`, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const card = document.getElementById(`playlist-card-${playlistId}`);
+                if (card) card.remove();
+                showToast('Playlist deleted');
+            }
+        })
+        .catch(() => showToast('Error deleting playlist', 'error'));
+    }
+</script>
+{% endblock %}

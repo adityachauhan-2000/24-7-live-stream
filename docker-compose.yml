@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    container_name: stream_studio
+    restart: always
+    volumes:
+      # Persist database and files across container restarts
+      - ./stream_app.db:/app/stream_app.db
+      - ./uploads:/app/uploads
+      - ./playlists:/app/playlists
+      - ./static/thumbnails:/app/static/thumbnails
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  caddy_data:
+  caddy_config:

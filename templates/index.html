@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="yt-page-header">
+    <div>
+        <h1 class="yt-page-title">Channel Dashboard</h1>
+        <p class="yt-page-desc">Overview of your 24/7 automated YouTube live stream studio.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="/upload" class="yt-btn yt-btn-secondary">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+            </svg>
+            <span>UPLOAD</span>
+        </a>
+        <a href="/stream" class="yt-btn yt-btn-primary">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M16.5 6.5A7.97 7.97 0 0 0 12 5c-1.74 0-3.34.56-4.5 1.5l1.41 1.41C9.8 7.33 10.86 7 12 7c1.14 0 2.2.33 3.09.91l1.41-1.41zm3.54-3.54A11.95 11.95 0 0 0 12 1C8.24 1 4.87 2.45 2.34 4.88l1.42 1.42C5.74 4.38 8.68 3 12 3c3.32 0 6.26 1.38 8.24 3.3l1.42-1.42z"/>
+            </svg>
+            <span>GO LIVE</span>
+        </a>
+    </div>
+</div>
+
+<!-- Studio 3-Column Summary Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="yt-card" style="margin-bottom: 0;">
+        <div style="font-size: 0.85rem; color: var(--yt-text-secondary); font-weight: 500;">Live Broadcast Status</div>
+        <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            {% if status.is_running %}
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #2ba640;"></span>
+                <span style="font-size: 1.25rem; font-weight: 700; color: #2ba640;">LIVE 24/7</span>
+            {% else %}
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #717171;"></span>
+                <span style="font-size: 1.25rem; font-weight: 700; color: var(--yt-text-secondary);">STANDBY</span>
+            {% endif %}
+        </div>
+        <div style="font-size: 0.775rem; color: var(--yt-text-disabled); margin-top: 0.5rem;">
+            {% if status.is_running %}Outputting loop continuously{% else %}Ready for RTMP connection{% endif %}
+        </div>
+    </div>
+
+    <div class="yt-card" style="margin-bottom: 0;">
+        <div style="font-size: 0.85rem; color: var(--yt-text-secondary); font-weight: 500;">Channel Video Library</div>
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--yt-text-primary); margin-top: 0.5rem;">{{ video_count }}</div>
+        <div style="font-size: 0.775rem; color: var(--yt-text-disabled); margin-top: 0.25rem;">Uploaded Stream Assets</div>
+    </div>
+
+    <div class="yt-card" style="margin-bottom: 0;">
+        <div style="font-size: 0.85rem; color: var(--yt-text-secondary); font-weight: 500;">24/7 Looping Playlists</div>
+        <div style="font-size: 1.75rem; font-weight: 700; color: var(--yt-text-primary); margin-top: 0.5rem;">{{ playlist_count }}</div>
+        <div style="font-size: 0.775rem; color: var(--yt-text-disabled); margin-top: 0.25rem;">Configured Playlists</div>
+    </div>
+</div>
+
+<!-- Broadcast Center Panel -->
+<div class="yt-card">
+    <div class="yt-card-header">
+        <div class="yt-card-title">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#ff4e45">
+                <circle cx="12" cy="12" r="3.2"/>
+                <path d="M9 12c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5S9 12.83 9 12zm7.07-7.07l-1.41 1.41A7.97 7.97 0 0 1 18 12c0 2.21-.89 4.21-2.34 5.66l1.41 1.41A9.97 9.97 0 0 0 20 12c0-2.76-1.12-5.26-2.93-7.07zm-10.14 0A9.97 9.97 0 0 0 4 12c0 2.76 1.12 5.26 2.93 7.07l1.41-1.41A7.97 7.97 0 0 1 6 12c0-2.21.89-4.21 2.34-5.66L6.93 4.93z"/>
+            </svg>
+            <span>Live Broadcast Control</span>
+        </div>
+        <a href="/stream" class="yt-btn yt-btn-secondary yt-btn-sm">Control Room</a>
+    </div>
+
+    {% if status.is_running %}
+        <div style="background: #181818; border: 1px solid var(--yt-border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <div style="font-size: 0.775rem; color: var(--yt-text-secondary);">Stream Target</div>
+                    <div style="font-weight: 600; color: var(--yt-blue); margin-top: 0.25rem; font-family: monospace;">{{ status.stream_url }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.775rem; color: var(--yt-text-secondary);">Current Playing Source</div>
+                    <div style="font-weight: 600; color: #2ba640; margin-top: 0.25rem;">{{ status.current_source }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.775rem; color: var(--yt-text-secondary);">Playback Engine</div>
+                    <div style="font-weight: 600; color: var(--yt-text-primary); margin-top: 0.25rem;">24/7 Concat Demuxer</div>
+                </div>
+            </div>
+        </div>
+
+        <form action="/stop_stream" method="POST">
+            <button type="submit" class="yt-btn yt-btn-danger">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M6 6h12v12H6z"/>
+                </svg>
+                <span>STOP BROADCAST</span>
+            </button>
+        </form>
+    {% else %}
+        <p style="color: var(--yt-text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
+            No live stream is currently active. Your credentials and playlist configurations are saved in the database.
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/stream" class="yt-btn yt-btn-primary">
+                <span>GO TO CONTROL ROOM</span>
+            </a>
+            <a href="/upload" class="yt-btn yt-btn-secondary">
+                <span>MANAGE CONTENT</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Playlists & Recent Videos Row -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <!-- Active Playlists -->
+    <div class="yt-card" style="margin-bottom: 0;">
+        <div class="yt-card-header">
+            <div class="yt-card-title">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M19 9H2v2h17V9zm0-4H2v2h17V5zM2 15h13v-2H2v2zm15-2v6l5-3-5-3z"/>
+                </svg>
+                <span>Playlists</span>
+            </div>
+            <a href="/upload" class="yt-btn yt-btn-secondary yt-btn-sm">View All</a>
+        </div>
+
+        {% if playlists %}
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for playlist in playlists %}
+                    <div style="background: #181818; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--yt-border); display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-weight: 500; font-size: 0.9rem; color: var(--yt-text-primary);">
+                            {{ playlist.name }}
+                        </div>
+                        <span class="yt-chip">{{ playlist.video_count }} videos</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="color: var(--yt-text-disabled); font-size: 0.85rem; padding: 1.5rem; text-align: center;">
+                No playlists created yet.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Uploads Preview -->
+    <div class="yt-card" style="margin-bottom: 0;">
+        <div class="yt-card-header">
+            <div class="yt-card-title">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                </svg>
+                <span>Recent Videos</span>
+            </div>
+            <a href="/upload" class="yt-btn yt-btn-secondary yt-btn-sm">View All</a>
+        </div>
+
+        {% if recent_videos %}
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for video in recent_videos %}
+                    <div style="background: #181818; padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid var(--yt-border); display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 60px; height: 34px; background: #000; border-radius: 4px; overflow: hidden; flex-shrink: 0;">
+                            {% if video.thumbnail %}
+                                <img src="{{ video.thumbnail }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.7rem; color: #555;">🎬</div>
+                            {% endif %}
+                        </div>
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--yt-text-primary);">{{ video.title }}</div>
+                            <div style="font-size: 0.75rem; color: var(--yt-text-disabled);">{{ video.size_bytes | format_size }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="color: var(--yt-text-disabled); font-size: 0.85rem; padding: 1.5rem; text-align: center;">
+                No videos uploaded yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
