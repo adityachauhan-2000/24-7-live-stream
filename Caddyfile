@@ -7,6 +7,6 @@
 # }
 
 # Example for just using the VPS IP (will serve over HTTP port 80):
-:80 {
+pyshot.org {
     reverse_proxy web:8000
 }
